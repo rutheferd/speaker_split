@@ -1,5 +1,5 @@
 import click
-from hello.src import there_command
+from elmer.src import train
 
 
 @click.group()
@@ -53,9 +53,9 @@ def main():
     help="Number of Training Epochs.",
 )
 @main.command()
-def there(name, greeting):
+def train(data_path, val_split, sampling_rate, batch_size, num_epochs):
     """Create a Greeting to Send to a Friend!"""
-    there_command.run(name, greeting)
+    train.run(data_path, val_split, sampling_rate, batch_size, num_epochs)
 
 
 if __name__ == "__main__":
