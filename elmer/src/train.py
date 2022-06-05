@@ -18,6 +18,7 @@ NOISE_SUBFOLDER = "noise"
 SHUFFLE_SEED = 43
 SCALE = 0.5
 
+
 def paths_and_labels_to_dataset(audio_paths, labels):
     """Constructs a dataset of audios and labels."""
     path_ds = tf.data.Dataset.from_tensor_slices(audio_paths)
@@ -41,7 +42,9 @@ def audio_to_fft(audio):
     # after FFT
     audio = tf.squeeze(audio, axis=-1)
     fft = tf.signal.fft(
-        tf.cast(tf.complex(real=audio, imag=tf.zeros_like(audio)), tf.complex64)
+        tf.cast(
+            tf.complex(real=audio, imag=tf.zeros_like(audio)), tf.complex64
+        )
     )
     fft = tf.expand_dims(fft, axis=-1)
 
@@ -76,7 +79,9 @@ def build_dataset(data_audio_path, val_split, batch_size):
         labels += [label] * len(speaker_sample_paths)
 
     print(
-        "Found {} files belonging to {} classes.".format(len(audio_paths), len(class_names))
+        "Found {} files belonging to {} classes.".format(
+            len(audio_paths), len(class_names)
+        )
     )
 
     # Shuffle
@@ -87,7 +92,11 @@ def build_dataset(data_audio_path, val_split, batch_size):
 
     # Split into training and validation
     num_val_samples = int(val_split * len(audio_paths))
-    print("Using {} files for training.".format(len(audio_paths) - num_val_samples))
+    print(
+        "Using {} files for training.".format(
+            len(audio_paths) - num_val_samples
+        )
+    )
     train_audio_paths = audio_paths[:-num_val_samples]
     train_labels = labels[:-num_val_samples]
 
@@ -97,13 +106,14 @@ def build_dataset(data_audio_path, val_split, batch_size):
 
     # Create 2 datasets, one for training and the other for validation
     train_ds = paths_and_labels_to_dataset(train_audio_paths, train_labels)
-    train_ds = train_ds.shuffle(buffer_size=batch_size * 8, seed=SHUFFLE_SEED).batch(
-        batch_size
-    )
+    train_ds = train_ds.shuffle(
+        buffer_size=batch_size * 8, seed=SHUFFLE_SEED
+    ).batch(batch_size)
 
     valid_ds = paths_and_labels_to_dataset(valid_audio_paths, valid_labels)
-    valid_ds = valid_ds.shuffle(buffer_size=32 * 8, seed=SHUFFLE_SEED).batch(32)
-
+    valid_ds = valid_ds.shuffle(buffer_size=32 * 8, seed=SHUFFLE_SEED).batch(
+        32
+    )
 
     # Add noise to the training set
     # train_ds = train_ds.map(
@@ -123,6 +133,7 @@ def build_dataset(data_audio_path, val_split, batch_size):
     valid_ds = valid_ds.prefetch(tf.data.AUTOTUNE)
 
     pass
+
 
 def residual_block(x, filters, conv_num=3, activation="relu"):
     # Shortcut
@@ -150,16 +161,58 @@ def build_model(input_shape, num_classes):
     x = keras.layers.Dense(256, activation="relu")(x)
     x = keras.layers.Dense(128, activation="relu")(x)
 
-    outputs = keras.layers.Dense(num_classes, activation="softmax", name="output")(x)
+    outputs = keras.layers.Dense(
+        num_classes, activation="softmax", name="output"
+    )(x)
 
     return keras.models.Model(inputs=inputs, outputs=outputs)
 
-def train(data_path, val_split, sampling_rate, batch_size, num_epochs):
-    pass
+
+def train(train_ds, valid_ds, sampling_rate, num_epochs, class_names):
+    model = build_model((sampling_rate // 2, 1), len(class_names))
+
+    model.summary()
+
+    # Compile the model using Adam's default learning rate
+    model.compile(
+        optimizer="Adam",
+        loss="sparse_categorical_crossentropy",
+        metrics=["accuracy"],
+    )
+
+    # Add callbacks:
+    # 'EarlyStopping' to stop training when the model is not enhancing anymore
+    # 'ModelCheckPoint' to always keep the model that has the best val_accuracy
+    model_save_filename = "model.h5"
+
+    earlystopping_cb = keras.callbacks.EarlyStopping(
+        patience=10, restore_best_weights=True
+    )
+    mdlcheckpoint_cb = keras.callbacks.ModelCheckpoint(
+        model_save_filename, monitor="val_accuracy", save_best_only=True
+    )
+
+    history = model.fit(
+        train_ds,
+        epochs=num_epochs,
+        validation_data=valid_ds,
+        callbacks=[earlystopping_cb, mdlcheckpoint_cb],
+    )
+
+    return history, model
+
+
+def evaluate_model(model, valid_ds, verbose=True):
+    """Return the evaluation data."""
+    if verbose:
+        logging.info(model.evaluate(valid_ds))
+    return model.evaluate(valid_ds)
 
 
 def run(data_path, val_split, sampling_rate, batch_size, num_epochs):
-    sentence = train(data_path, val_split, sampling_rate, batch_size, num_epochs)
+    sentence = train(
+        data_path, val_split, sampling_rate, batch_size, num_epochs
+    )
     data_audio_path = os.path.join(data_path, AUDIO_SUBFOLDER)
     data_noise_path = os.path.join(data_path, NOISE_SUBFOLDER)
     print(sentence)
