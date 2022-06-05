@@ -132,7 +132,7 @@ def build_dataset(data_audio_path, val_split, batch_size):
     )
     valid_ds = valid_ds.prefetch(tf.data.AUTOTUNE)
 
-    pass
+    return train_ds, valid_ds, class_names
 
 
 def residual_block(x, filters, conv_num=3, activation="relu"):
@@ -210,9 +210,13 @@ def evaluate_model(model, valid_ds, verbose=True):
 
 
 def run(data_path, val_split, sampling_rate, batch_size, num_epochs):
-    sentence = train(
-        data_path, val_split, sampling_rate, batch_size, num_epochs
-    )
+
     data_audio_path = os.path.join(data_path, AUDIO_SUBFOLDER)
     data_noise_path = os.path.join(data_path, NOISE_SUBFOLDER)
-    print(sentence)
+
+    # First Step Build Dataset For Training:
+    train_ds, valid_ds, class_names = build_dataset(
+        data_audio_path=data_audio_path,
+        val_split=val_split,
+        batch_size=batch_size,
+    )
