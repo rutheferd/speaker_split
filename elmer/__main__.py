@@ -1,5 +1,5 @@
 import click
-from elmer.src import train
+from elmer.src import train_command
 
 
 @click.group()
@@ -55,7 +55,9 @@ def main():
 @main.command()
 def train(data_path, val_split, sampling_rate, batch_size, num_epochs):
     """Create a Greeting to Send to a Friend!"""
-    train.run(data_path, val_split, sampling_rate, batch_size, num_epochs)
+    train_command.run(
+        data_path, val_split, sampling_rate, batch_size, num_epochs
+    )
 
 
 if __name__ == "__main__":

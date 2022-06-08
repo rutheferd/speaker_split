@@ -17,6 +17,7 @@ AUDIO_SUBFOLDER = "audio"
 NOISE_SUBFOLDER = "noise"
 SHUFFLE_SEED = 43
 SCALE = 0.5
+g_sampling_rate = 16000
 
 
 def paths_and_labels_to_dataset(audio_paths, labels):
@@ -32,7 +33,7 @@ def paths_and_labels_to_dataset(audio_paths, labels):
 def path_to_audio(path):
     """Reads and decodes an audio file."""
     audio = tf.io.read_file(path)
-    audio, _ = tf.audio.decode_wav(audio, 1, SAMPLING_RATE)
+    audio, _ = tf.audio.decode_wav(audio, 1, g_sampling_rate)
     return audio
 
 
@@ -168,8 +169,8 @@ def build_model(input_shape, num_classes):
     return keras.models.Model(inputs=inputs, outputs=outputs)
 
 
-def train(train_ds, valid_ds, sampling_rate, num_epochs, class_names):
-    model = build_model((sampling_rate // 2, 1), len(class_names))
+def train(train_ds, valid_ds, num_epochs, class_names):
+    model = build_model((g_sampling_rate // 2, 1), len(class_names))
 
     model.summary()
 
@@ -211,12 +212,22 @@ def evaluate_model(model, valid_ds, verbose=True):
 
 def run(data_path, val_split, sampling_rate, batch_size, num_epochs):
 
+    global g_sampling_rate
+    g_sampling_rate = sampling_rate
+
     data_audio_path = os.path.join(data_path, AUDIO_SUBFOLDER)
-    data_noise_path = os.path.join(data_path, NOISE_SUBFOLDER)
+    # data_noise_path = os.path.join(data_path, NOISE_SUBFOLDER)
 
     # First Step Build Dataset For Training:
     train_ds, valid_ds, class_names = build_dataset(
         data_audio_path=data_audio_path,
         val_split=val_split,
         batch_size=batch_size,
+    )
+
+    history, model = train(
+        train_ds=train_ds,
+        valid_ds=valid_ds,
+        num_epocs=num_epochs,
+        class_names=class_names,
     )
