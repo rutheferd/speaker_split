@@ -1,5 +1,5 @@
 import click
-from elmer.src import train_command
+from elmer.src import train_command, audio_split
 
 
 @click.group()
@@ -57,6 +57,34 @@ def train(data_path, val_split, sampling_rate, batch_size, num_epochs):
     """Create a Greeting to Send to a Friend!"""
     train_command.run(
         data_path, val_split, sampling_rate, batch_size, num_epochs
+    )
+
+
+@click.option(
+    "--audio_path",
+    "-p",
+    type=click.STRING,
+    required=True,
+    help="Path to the dataset to split.",
+)
+@click.option(
+    "--extension",
+    "-e",
+    type=click.STRING,
+    required=True,
+    help="Path to the dataset to split.",
+)
+@click.option(
+    "--chunk_size",
+    "-c",
+    type=click.INT,
+    required=True,
+    help="Path to the dataset to split.",
+)
+@main.command()
+def split(audio_path, extension, chunk_size):
+    audio_split.run(
+        filepath=audio_path, extension=extension, chunk_length=chunk_size
     )
 
 

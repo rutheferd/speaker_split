@@ -22,7 +22,7 @@ dependency_links = [
 ]
 
 setup(
-    name="hello_template",
+    name="elmer",
     description="Hello Template is a quick example and template for easily starting a pypi project.",
     include_package_data=True,
     package_data={"": ["*.txt"]},
@@ -32,7 +32,7 @@ setup(
     python_requires=">=3.10",  # any python greater than 2.7
     entry_points="""
         [console_scripts]
-        hello=hello.__main__:main
+        elmer=elmer.__main__:main
     """,
     author="Austin Ruth",
     keywords="template, hello, easy, project, python",
@@ -42,7 +42,7 @@ setup(
     url="https://github.com/rutheferd/hello",
     download_url="",
     dependency_links=dependency_links,
-    author_email="aruth3@gatech.edu",
+    author_email="aaustinruth@gmail.com",
     classifiers=[
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.10",
