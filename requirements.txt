@@ -3,3 +3,6 @@ black
 flake8
 pre-commit
 setuptools
+pydub
+tensorflow
+pathlib

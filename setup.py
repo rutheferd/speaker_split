@@ -29,7 +29,7 @@ setup(
     version="0.0.1",
     packages=find_packages(),  # list of all packages
     install_requires=install_requires,
-    python_requires=">=3.10",  # any python greater than 2.7
+    python_requires=">=3.8",  # any python greater than 2.7
     entry_points="""
         [console_scripts]
         elmer=elmer.__main__:main
